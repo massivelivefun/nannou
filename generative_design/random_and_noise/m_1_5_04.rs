@@ -67,9 +67,9 @@ impl Agent {
         );
         let randomizer = random_f32();
         let color = if randomizer < 0.5 {
-            hsla(random_range(0.47, 0.52), 0.7, random_f32(), agent_alpha)
+            hsla(random_range(0.47, 0.52), 0.01, random_f32(), agent_alpha)
         } else {
-            hsla(random_range(0.11, 0.16), 0.7, random_f32(), agent_alpha)
+            hsla(random_range(0.11, 0.16), 0.01, random_f32(), agent_alpha)
         };
         Agent {
             vector,
