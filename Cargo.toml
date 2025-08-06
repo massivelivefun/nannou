@@ -22,3 +22,7 @@ members = [
 
 # Required for wgpu v0.10 feature resolution.
 resolver = "2"
+
+# [patch.crates-io]
+# wgpu = { path = "../wgpu/wgpu", package = "wgpu" }
+# wgpu-types = { path = "../wgpu/wgpu-types", package = "wgpu-types" }
