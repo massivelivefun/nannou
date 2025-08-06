@@ -47,6 +47,7 @@ struct Model {
     y: Vec<f32>,
     filled: bool,
     freeze: bool,
+    overlay_alpha: f32,
 }
 
 fn model(app: &App) -> Model {
@@ -54,11 +55,12 @@ fn model(app: &App) -> Model {
         .size(1280, 720)
         .view(view)
         .key_released(key_released)
+        .mouse_released(mouse_released)
         .mouse_pressed(mouse_pressed)
         .build()
         .unwrap();
 
-    let form_resolution = 150;
+    let form_resolution = 200;
     let angle = (360.0 / form_resolution as f32).to_radians();
     let init_radius = 150.0;
     let mut x = Vec::new();
@@ -77,14 +79,27 @@ fn model(app: &App) -> Model {
         y,
         filled: false,
         freeze: false,
+        overlay_alpha: 0.03,
     }
 }
 
 fn update(app: &App, model: &mut Model, _update: Update) {
-    // floating towards mouse position
-    model.center_x += (app.mouse.x - model.center_x) * 0.01;
-    model.center_y += (app.mouse.y - model.center_y) * 0.01;
+    // floating towards mouse position when left mouse button is held down
+    if app.mouse.buttons.left().is_down() {
+        model.center_x += (app.mouse.x - model.center_x) * 0.01;
+        model.center_y += (app.mouse.y - model.center_y) * 0.01;
+    } else {
+        let sine = app.time.sin();
+        let slowersine = (app.time/ 2.0).sin();
+        let boundary = app.window_rect();
 
+        let x = map_range(slowersine, -2.0, 2.0, boundary.left(), boundary.right());
+        let y = map_range(sine, -2.0, 2.0, boundary.bottom(), boundary.top());
+
+        model.center_x = x;
+        model.center_y = y;
+    }
+    
     // calculate new points
     for i in 0..model.form_resolution {
         model.x[i] += random_range(-model.step_size, model.step_size);
@@ -95,7 +110,11 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
     if frame.nth() == 0 || app.keys.down.contains(&Key::Delete) {
-        draw.background().color(WHITE);
+        draw.background().color(BLACK);
+    } else {
+        draw.rect()
+            .wh(app.window_rect().wh())
+            .rgba(0.0, 0.0, 0.0, model.overlay_alpha);
     }
 
     let mut builder = nannou::geom::path::Builder::new().with_svg();
@@ -134,7 +153,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
     } else {
         draw.path()
             .stroke()
-            .rgba(0.0, 0.0, 0.0, 0.4)
+            .rgba(1.0, 1.0, 1.0, 0.4)
             .events(path.iter());
     }
 
@@ -165,6 +184,28 @@ fn key_released(app: &App, model: &mut Model, key: Key) {
         _ => (),
     }
 }
+
+fn mouse_released(app: &App, model: &mut Model, button: MouseButton) {
+    if button == MouseButton::Left {
+        let draw = app.draw();
+        draw.background().color(BLACK);
+        // model.center_x = app.mouse.x;
+        // model.center_y = app.mouse.y;
+        let angle = (360.0 / model.form_resolution as f32).to_radians();
+        let _radius = model.init_radius * random_range(0.5, 1.0);
+        for i in 0..model.form_resolution {
+            model.x[i] = (angle * i as f32).cos() * model.init_radius;
+            model.y[i] = (angle * i as f32).sin() * model.init_radius;
+        }
+    }
+}
+
+// fn mouse_moved(app: &App, model: &mut Model, pos: Point2) {
+//     if app.mouse.buttons.left().is_down() {
+//         model.center_x += (app.mouse.x - model.center_x) * 0.01;
+//         model.center_y += (app.mouse.y - model.center_y) * 0.01;
+//     }
+// }
 
 fn mouse_pressed(app: &App, model: &mut Model, _button: MouseButton) {
     // init shape on mouse position
