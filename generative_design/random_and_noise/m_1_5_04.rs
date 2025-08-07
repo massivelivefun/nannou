@@ -167,7 +167,7 @@ struct Model {
 
 fn model(app: &App) -> Model {
     app.new_window()
-        .size(1280, 720)
+        .size(720, 720)
         .view(view)
         .key_released(key_released)
         .build()
@@ -200,7 +200,7 @@ fn model(app: &App) -> Model {
         agents,
         overlay_alpha: 0.08,
         stroke_width: 2.0,
-        draw_mode: 1,
+        draw_mode: 2,
         noise_seed: 12,
     }
 }
@@ -214,6 +214,10 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
 }
 
 fn view(app: &App, model: &Model, frame: Frame) {
+    if app.elapsed_frames() > 60 * 20 {
+        app.quit();
+    }
+
     // Begin drawing
     let draw = app.draw();
 
@@ -231,6 +235,14 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
     // Write the result of our drawing to the window's frame.
     draw.to_frame(app, &frame).unwrap();
+
+    let file_path = app
+        .project_path()
+        .expect("failed to find project path")
+        .join("frames/frames_m_1_5_04_2")
+        .join(format!("{:05}.png", app.elapsed_frames()));
+
+    app.main_window().capture_frame(file_path);
 }
 
 fn key_released(app: &App, model: &mut Model, key: Key) {

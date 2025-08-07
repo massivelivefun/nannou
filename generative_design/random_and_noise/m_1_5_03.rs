@@ -105,7 +105,7 @@ impl Agent {
         draw.line()
             .start(self.vector_old)
             .end(self.vector)
-            .rgba(0.0, 0.0, 0.0, agent_alpha)
+            .rgba(random_range(0.6, 1.0), random_range(0.6, 1.0), random_range(0.6, 1.0), agent_alpha)
             .stroke_weight(stroke_weight * self.step_size);
     }
 }
@@ -163,15 +163,19 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
 }
 
 fn view(app: &App, model: &Model, frame: Frame) {
+    if app.elapsed_frames() > 60 * 20 {
+        app.quit();
+    }
+
     // Begin drawing
     let draw = app.draw();
 
     if frame.nth() == 0 || app.keys.down.contains(&Key::Delete) {
-        draw.background().color(WHITE);
+        draw.background().color(BLACK);
     } else {
         draw.rect()
             .wh(app.window_rect().wh())
-            .rgba(1.0, 1.0, 1.0, model.overlay_alpha);
+            .rgba(0.0, 0.0, 0.0, model.overlay_alpha);
     }
 
     model.agents.iter().for_each(|agent| {
@@ -180,6 +184,14 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
     // Write the result of our drawing to the window's frame.
     draw.to_frame(app, &frame).unwrap();
+
+    let file_path = app
+        .project_path()
+        .expect("failed to find project path")
+        .join("frames/frames_m_1_5_03_1")
+        .join(format!("{:05}.png", app.elapsed_frames()));
+
+    app.main_window().capture_frame(file_path);
 }
 
 fn key_released(app: &App, model: &mut Model, key: Key) {
